@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Memory Challenge</title>
+
+  <!-- Font ceria "Fredoka" dari Google Fonts (butuh internet; jika offline otomatis pakai font cadangan) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- layar.js: bingkai 16:9, layar penuh, dan pemberitahuan landscape (dimuat sebelum game.js) -->
+  <script src="layar.js"></script>
+
+  <!-- audio.js: musik latar dan efek suara (dimuat sebelum game.js) -->
+  <script src="audio.js"></script>
+</head>
+<body>
+
+  <!-- Dekorasi latar belakang (hanya hiasan) -->
+  <div class="bg-decor" aria-hidden="true">
+    <span style="--x:47%; --y:90%; --d:0s">🍎</span>
+    <span style="--x:90%; --y:8%;  --d:1.2s">⭐</span>
+    <span style="--x:5%;  --y:80%; --d:0.6s">🌸</span>
+    <span style="--x:92%; --y:76%; --d:1.8s">🐱</span>
+  </div>
+
+  <!-- Wadah efek confetti (diisi lewat JavaScript) -->
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+  <!-- ===== BINGKAI GAME 16:9 (ukuran desain 960 x 540, diskalakan otomatis oleh layar.js) ===== -->
+  <div class="stage" id="stage">
+
+    <!-- ===================== LAYAR AWAL ===================== -->
+    <section id="start-screen" class="screen start" aria-labelledby="start-title">
+      <div class="start-left">
+        <img class="school-logo" src="logo.png" alt="Logo sekolah" onerror="this.style.display='none'">
+
+        <h1 id="start-title"><span class="logo">🧠</span> <span class="title-text">Memory Challenge</span></h1>
+        <p class="tagline">Hafalkan urutan gambar, lalu susun kembali secepat mungkin!</p>
+        <div class="name-field">
+          <label for="player-name">Nama pemain</label>
+          <input id="player-name" type="text" maxlength="12" autocomplete="off" placeholder="Tulis namamu dulu..." />
+          <p id="name-error" class="name-error" hidden>Isi nama dulu sebelum mulai ya!</p>
+        </div>
+        <div class="start-buttons">
+          <button id="start-btn" class="btn btn-primary btn-big" type="button">▶ Mulai Game</button>
+          <div class="start-extra">
+            <button class="btn btn-ghost" type="button" data-fs>⛶ Layar Penuh</button>
+            <div class="audio-controls">
+              <button class="icon-btn audio-btn" type="button" data-audio="music" aria-label="Musik"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/><line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+              <button class="icon-btn audio-btn" type="button" data-audio="sfx" aria-label="Efek suara"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <p class="credit">Developed By Kurnia Ichsan</p>
+      </div>
+
+      <div class="start-right card">
+        <div class="tabs" role="tablist">
+          <button id="tab-score" class="tab active" type="button" role="tab" aria-selected="true" data-tab="score">🏆 Papan Skor</button>
+          <button id="tab-how" class="tab" type="button" role="tab" aria-selected="false" data-tab="how">❓ Cara Bermain</button>
+        </div>
+
+        <div id="panel-score" class="tab-panel" role="tabpanel">
+          <ol id="scoreboard" class="scoreboard"></ol>
+          <p id="scoreboard-empty" class="scoreboard-empty" hidden>Belum ada skor. Jadilah yang pertama! 🎉</p>
+          <button id="reset-scores" class="reset-scores" type="button">Hapus papan skor</button>
+        </div>
+
+        <ol id="panel-how" class="how-to tab-panel" role="tabpanel" hidden>
+          <li>
+            <span class="step-num">1</span>
+            <div><strong>Hafalkan</strong> urutan gambar dari kiri ke kanan sebelum waktu habis. Makin tinggi level, makin banyak gambar.</div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>Gambar menghilang dan berubah menjadi <strong>kotak bernomor</strong> 1, 2, 3, dan seterusnya.</div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div><strong>Isi kotak</strong> dengan gambar pilihan sesuai urutan awal. Bisa dengan klik atau drag-and-drop.</div>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <div>Tekan <strong>Periksa Jawaban</strong>. Kalau ada yang salah, kamu gugur dan mulai lagi dari awal.</div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===================== LAYAR PERMAINAN ===================== -->
+    <section id="game-screen" class="screen game" aria-label="Layar permainan" hidden>
+
+      <!-- Bilah atas: judul, level, skor, level selesai, tombol layar penuh -->
+      <header class="topbar">
+        <div class="brand"><span class="logo">🧠</span> <span class="title-text">Memory Challenge</span></div>
+
+        <div class="level-dots" id="level-dots" aria-hidden="true"></div>
+
+        <div class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Level</span>
+            <span class="hud-value" id="level-text">1 / 3</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Skor</span>
+            <span class="hud-value" id="score-text">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Sesi</span>
+            <span class="hud-value" id="session-text">1 / 10</span>
+          </div>
+        </div>
+
+        <div class="audio-controls">
+          <button class="icon-btn audio-btn" type="button" data-audio="music" aria-label="Musik"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/><line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+          <button class="icon-btn audio-btn" type="button" data-audio="sfx" aria-label="Efek suara"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+        </div>
+
+        <button id="home-btn" class="icon-btn" type="button" aria-label="Menu utama" title="Kembali ke menu utama">🏠</button>
+        <button class="icon-btn" type="button" data-fs aria-label="Layar penuh" title="Layar penuh (tombol F)">⛶</button>
+      </header>
+
+      <!-- Timer (dipakai untuk fase menghafal dan fase mengerjakan) -->
+      <div class="timer-card" id="timer-box" data-mode="memorize">
+        <span class="timer-label" id="timer-label">Waktu Menghafal</span>
+        <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
+        <span class="timer-value"><span id="timer-value">10</span><small>detik</small></span>
+      </div>
+
+      <!-- Papan permainan -->
+      <div class="card board-card">
+        <p id="status" class="status" aria-live="polite"></p>
+
+        <!-- Kotak urutan (berisi gambar saat menghafal, kotak kosong saat menjawab) -->
+        <div id="slots" class="slots"></div>
+
+        <!-- Kumpulan gambar pilihan (disembunyikan saat fase menghafal) -->
+        <div id="tray" class="tray" hidden>
+          <h2 class="tray-title">Pilih gambar</h2>
+          <div id="choices" class="choices"></div>
+        </div>
+
+        <div id="actions" class="actions" hidden>
+          <button id="clear-btn" class="btn btn-ghost" type="button">🗑️ Hapus Semua</button>
+          <button id="check-btn" class="btn btn-primary" type="button" disabled>✅ Periksa Jawaban</button>
+        </div>
+
+        <!-- Hasil pemeriksaan -->
+        <div id="result-panel" class="result" hidden aria-live="assertive">
+          <div class="result-main">
+            <h2 id="result-title"></h2>
+            <p id="result-message"></p>
+            <div class="result-buttons">
+              <button id="menu-btn" class="btn btn-ghost" type="button" hidden>🏠 Menu Utama</button>
+              <button id="retry-btn" class="btn btn-warning" type="button" hidden>Main dari Awal</button>
+              <button id="next-btn" class="btn btn-success" type="button" hidden>Sesi Berikutnya ➜</button>
+            </div>
+          </div>
+          <div id="result-breakdown" class="breakdown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Jendela pop-up konfirmasi (menggantikan confirm() bawaan browser) -->
+    <div id="modal" class="modal" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div id="modal-icon" class="modal-icon" aria-hidden="true">🏠</div>
+        <h2 id="modal-title"></h2>
+        <p id="modal-text"></p>
+        <div class="modal-buttons">
+          <button id="modal-cancel" class="btn btn-ghost" type="button">Batal</button>
+          <button id="modal-ok" class="btn btn-primary" type="button">Ya</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== PEMBERITAHUAN LANDSCAPE (tampil otomatis di HP posisi tegak; diatur oleh layar.js) ===== -->
+  <div id="rotate-notice" class="rotate-notice" role="alertdialog" aria-labelledby="rotate-title">
+    <div class="phone-icon" aria-hidden="true">📱</div>
+    <h2 id="rotate-title">Putar HP-mu ke Landscape</h2>
+    <p>Memory Challenge dimainkan dalam posisi mendatar. Miringkan HP-mu dulu sebelum mulai bermain.</p>
+    <button class="btn btn-light" type="button" data-fs>⛶ Layar Penuh</button>
+  </div>
+
+  <!-- Pesan singkat dari layar.js (mis. layar penuh tidak didukung) -->
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+/* ==========================================================
+   Memory Challenge - style.css  (versi landscape 16:9)
+
+   Seluruh game berada di dalam "bingkai" (.stage) berukuran desain
+   960 x 540 px (rasio 16:9). layar.js menghitung variabel --fit
+   sehingga bingkai diperkecil / diperbesar agar selalu muat di layar.
+   Semua ukuran di bawah ini adalah ukuran DESAIN (bukan ukuran layar).
+
+   Bagian: 1) Dasar & bingkai   2) Tombol      3) Layar awal
+           4) Layar permainan   5) Hasil       6) Layar akhir
+           7) Pemberitahuan landscape          8) Animasi
+   ========================================================== */
+
+/* ---------- 1. Variabel, dasar, dan bingkai 16:9 ---------- */
+:root {
+  --fit: 1; /* diatur oleh layar.js */
+
+  --bg1: #e8e6ff;
+  --bg2: #ffe9e1;
+  --primary: #6c63ff;
+  --primary-dark: #5148d8;
+  --accent: #ff7a90;
+  --success: #22b573;
+  --success-soft: #e6f9f0;
+  --danger: #ef5350;
+  --danger-soft: #ffeded;
+  --warning: #ffa726;
+  --warning-soft: #fff5e1;
+  --text: #2b2850;
+  --muted: #6f6c93;
+  --card: #ffffff;
+  --line: #e4e2fb;
+  --shadow: 0 8px 26px rgba(80, 70, 160, 0.13);
+  --shadow-sm: 0 3px 10px rgba(80, 70, 160, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+/* Atribut [hidden] harus selalu menang atas display lain */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  overflow: hidden; /* tidak ada scroll: semua muat di dalam bingkai */
+  font-family: "Fredoka", ui-rounded, "Nunito", "Quicksand", "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--bg1), var(--bg2)) fixed;
+  line-height: 1.4;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button { font-family: inherit; }
+
+/* Bingkai 16:9: ditaruh di tengah layar lalu diskalakan sebesar --fit */
+.stage {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 960px;
+  height: 540px;
+  margin: -270px 0 0 -480px;
+  padding: 14px;
+  transform: scale(var(--fit));
+  transform-origin: center center;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.screen { flex: 1 1 auto; min-height: 0; animation: fadeUp 0.4s ease both; }
+
+.card {
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.title-text {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Hiasan latar belakang (mengisi area di luar bingkai) */
+.bg-decor { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bg-decor span {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  font-size: 3rem;
+  opacity: 0.2;
+  animation: floatY 6s ease-in-out var(--d) infinite;
+}
+
+/* Tombol layar penuh disembunyikan jika sudah tampil penuh (diatur layar.js) */
+.no-fs [data-fs] { display: none !important; }
+
+/* ---------- 2. Tombol ---------- */
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 24px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(80, 70, 160, 0.2); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn:focus-visible,
+.slot:focus-visible,
+.tile:focus-visible,
+.icon-btn:focus-visible { outline: 3px solid #ffb703; outline-offset: 3px; }
+
+.btn-primary { background: linear-gradient(135deg, var(--primary), #8b7bff); }
+.btn-success { background: linear-gradient(135deg, var(--success), #3fd493); }
+.btn-warning { background: linear-gradient(135deg, var(--warning), #ffbf5c); }
+.btn-ghost   { background: #fff; color: var(--primary-dark); }
+.btn-light   { background: #fff; color: var(--primary-dark); }
+.btn-big     { padding: 15px 36px; font-size: 24px; }
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--primary-dark);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  flex: 0 0 auto;
+}
+.icon-btn:hover { transform: scale(1.08); }
+
+/* Tombol musik / efek suara */
+.audio-controls { display: flex; gap: 6px; flex: 0 0 auto; }
+.audio-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.audio-btn svg { display: block; }
+.audio-btn .slash { display: none; }
+.audio-btn.off { color: var(--muted); background: #eceaf8; box-shadow: none; }
+.audio-btn.off .slash { display: inline; stroke: var(--danger); }
+
+/* ---------- 3. Layar awal ---------- */
+.start {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 22px;
+  align-items: center;
+}
+.start-left { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.start-emojis { font-size: 66px; letter-spacing: 8px; line-height: 1.1; animation: floatY 3s ease-in-out infinite; }
+.start h1 { margin: 6px 0 0; font-size: 50px; font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; }
+.tagline { margin: 10px 0 0; max-width: 430px; color: var(--muted); font-size: 19px; font-weight: 500; }
+.rules {
+  margin: 16px 0 22px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: var(--warning-soft);
+  color: #a86500;
+  font-weight: 600;
+  font-size: 16px;
+}
+.start-buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.start-extra { display: flex; align-items: center; gap: 12px; }
+
+.start { position: relative; }
+
+/* Logo sekolah (persegi panjang melebar ke samping) */
+.school-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 300px;
+  max-height: 64px;
+  object-fit: contain;
+  margin-bottom: 4px;
+  animation: floatY 3s ease-in-out infinite;
+}
+
+/* Tulisan kecil di bagian bawah menu utama */
+.credit {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  opacity: 0.8;
+}
+.tagline { margin-bottom: 14px !important; }
+
+/* Input nama */
+.name-field { width: 300px; margin-bottom: 12px; text-align: center; }
+.name-field label { display: block; font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.name-field input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 3px solid var(--line);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.name-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.18); }
+.name-field input.invalid { border-color: var(--danger); animation: shake 0.4s ease; }
+.name-error { margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--danger); }
+
+.start-right { padding: 18px 22px; align-self: stretch; margin: 6px 0; display: flex; flex-direction: column; }
+
+/* Tab Papan Skor / Cara Bermain */
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; background: #f1f0ff; padding: 5px; border-radius: 999px; }
+.tab {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tab.active { background: var(--primary); color: #fff; box-shadow: var(--shadow-sm); }
+
+.tab-panel { flex: 1 1 auto; min-height: 0; }
+
+/* Papan skor */
+.scoreboard { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sb-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  background: #f7f6ff;
+  border-radius: 12px;
+  font-size: 16px;
+}
+.sb-row.top1 { background: #fff4cc; }
+.sb-row.top2 { background: #eef0f5; }
+.sb-row.top3 { background: #ffe6d5; }
+.sb-row.me { outline: 2px solid var(--primary); }
+.sb-rank { font-weight: 700; color: var(--muted); text-align: center; }
+.sb-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-level { font-size: 12px; font-weight: 600; color: var(--muted); background: #fff; border-radius: 999px; padding: 2px 8px; }
+.sb-score { font-weight: 700; color: var(--primary-dark); min-width: 52px; text-align: right; }
+.scoreboard-empty { text-align: center; color: var(--muted); font-weight: 600; margin: 40px 0; }
+.reset-scores { display: block; margin: 8px auto 0; border: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; }
+.reset-scores:hover { color: var(--danger); }
+.how-to { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+.how-to li {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: #f7f6ff;
+  border-radius: 16px;
+  padding: 11px 14px;
+  font-size: 17px;
+  line-height: 1.3;
+}
+.step-num {
+  flex: 0 0 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* ---------- 4. Layar permainan ---------- */
+.game { display: flex; flex-direction: column; gap: 10px; }
+
+/* Bilah atas */
+.topbar { flex: 0 0 52px; display: flex; align-items: center; gap: 10px; }
+.brand { font-size: 20px; font-weight: 700; white-space: nowrap; }
+.level-dots { display: flex; gap: 6px; margin: 0 auto; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #cfcdf3; transition: all 0.3s ease; }
+.dot.current { background: var(--primary); transform: scale(1.3); }
+.dot.done { background: var(--success); }
+.endless-note { font-size: 13px; font-weight: 600; color: var(--primary-dark); background: #e9e8ff; padding: 6px 14px; border-radius: 999px; white-space: nowrap; }
+
+.hud { display: flex; gap: 8px; }
+.hud-item {
+  min-width: 86px;
+  padding: 3px 12px 4px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  line-height: 1.15;
+}
+.hud-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.hud-value { display: block; font-size: 24px; font-weight: 700; color: var(--primary-dark); }
+.hud-value.bump { animation: bump 0.5s ease; }
+
+/* Timer: satu baris (label - bar - angka) */
+.timer-card {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: var(--card);
+  border-radius: 21px;
+  box-shadow: var(--shadow-sm);
+}
+.timer-label { flex: 0 0 214px; font-size: 17px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.timer-track { flex: 1 1 auto; height: 14px; background: #eceaff; border-radius: 999px; overflow: hidden; }
+.timer-bar {
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.1s linear;
+}
+.timer-value { flex: 0 0 96px; text-align: right; font-size: 28px; font-weight: 700; color: var(--primary-dark); line-height: 1; }
+.timer-value small { margin-left: 5px; font-size: 14px; font-weight: 500; color: var(--muted); }
+.timer-card[data-mode="solve"] .timer-bar { background: linear-gradient(90deg, #2bc4a8, #4dabf7); }
+.timer-card.warning .timer-bar { background: linear-gradient(90deg, var(--danger), #ff8a65); }
+.timer-card.warning .timer-value { color: var(--danger); animation: pulse 0.8s ease-in-out infinite; }
+
+/* Papan: mengisi seluruh sisa tinggi bingkai */
+.board-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+}
+.status { flex: 0 0 auto; min-height: 26px; margin: 0; text-align: center; font-weight: 600; font-size: 19px; }
+
+/* Kotak urutan. Ukuran tiap kotak (--slot) dihitung game.js:
+   sangat besar saat menghafal, lebih kecil saat menjawab. */
+.slots {
+  --slot: 112px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 12px; /* samakan dengan SLOT_GAP di game.js */
+}
+.slots.shake { animation: shake 0.5s ease; }
+.slots.hiding .slot { animation: fadeOut 0.3s ease forwards; }
+
+.slot-wrap { position: relative; width: var(--slot); height: var(--slot); }
+
+.slot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: calc(var(--slot) * 0.18);
+  border: 3px dashed #c4c0fa;
+  background: #f5f4ff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.slot:hover { transform: translateY(-2px); }
+.slot.filled { border-style: solid; border-color: var(--line); background: #fff; box-shadow: var(--shadow-sm); }
+.slot.selected { border-color: var(--primary); background: #efedff; box-shadow: 0 0 0 5px rgba(108, 99, 255, 0.2); }
+.slot-wrap.drag-over .slot { border-color: var(--accent); background: #fff0f3; transform: scale(1.06); }
+
+/* Kotak pada fase menghafal: besar dan muncul satu per satu */
+.slot.memo {
+  cursor: default;
+  border-style: solid;
+  border-width: 4px;
+  border-color: #d9d6ff;
+  background: #fff;
+  box-shadow: var(--shadow);
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+.slot.memo:hover { transform: none; }
+
+.slot.locked { cursor: default; }
+.slot.locked:hover { transform: none; }
+.slot.correct { border-color: var(--success); background: var(--success-soft); animation: bump 0.6s ease; }
+.slot.wrong   { border-color: var(--danger);  background: var(--danger-soft); }
+
+.slot-placeholder { font-size: calc(var(--slot) * 0.46); font-weight: 700; color: #b9b5ee; }
+.slot-emoji { font-size: calc(var(--slot) * 0.58); line-height: 1; }
+.slot.pop .slot-emoji { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+.slot-badge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.slot-remove {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  z-index: 2;
+}
+.slot-remove:hover { transform: scale(1.1); }
+
+/* Kumpulan gambar pilihan */
+.tray {
+  flex: 0 0 auto;
+  background: #f7f6ff;
+  border-radius: 20px;
+  padding: 6px 12px 10px;
+  animation: fadeUp 0.4s ease both;
+}
+.tray.drop-ready { background: #fff0f3; outline: 2px dashed var(--accent); }
+.tray-title { margin: 0 0 4px; text-align: center; font-size: 15px; color: var(--muted); font-weight: 600; }
+.choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+.tile {
+  width: 104px;
+  padding: 7px 4px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 18px;
+  border: 3px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.tile:hover { transform: translateY(-3px); }
+.tile .tile-emoji { font-size: 52px; line-height: 1.1; }
+.tile .tile-name { font-size: 14px; font-weight: 600; color: var(--muted); line-height: 1.2; }
+.tile.used { opacity: 0.45; }
+.tile.selected { border-color: var(--primary); box-shadow: 0 0 0 5px rgba(108, 99, 255, 0.22); transform: translateY(-4px) scale(1.05); opacity: 1; }
+.tile.dragging { opacity: 0.4; }
+
+.actions { flex: 0 0 auto; display: flex; justify-content: center; gap: 16px; }
+.actions .btn-ghost { background: #f1f0ff; box-shadow: none; }
+
+/* ---------- 5. Hasil pemeriksaan ---------- */
+.result {
+  flex: 0 0 auto;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 18px;
+  border-radius: 20px;
+  animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.result-main { text-align: center; }
+.result h2 { margin: 0 0 2px; font-size: 26px; }
+.result p { margin: 0 0 10px; font-size: 17px; font-weight: 500; }
+.result.success { background: var(--success-soft); border: 2px solid #b5ecd0; }
+.result.error   { background: var(--danger-soft);  border: 2px solid #ffc9c8; }
+.result.timeout { background: var(--warning-soft); border: 2px solid #ffe0a3; }
+
+.breakdown { display: grid; gap: 5px; }
+.breakdown:empty { display: none; }
+.breakdown .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.breakdown .row strong { font-weight: 700; }
+.breakdown .row small { color: var(--muted); font-size: 13px; }
+.breakdown .row.total { background: #fff; font-size: 18px; color: var(--success); }
+
+.result-buttons { display: flex; justify-content: center; gap: 12px; }
+
+/* ---------- 6. Layar akhir ---------- */
+.end {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+.end-left { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.end h2 { margin: 4px 0 0; font-size: 38px; }
+.trophy { font-size: 100px; line-height: 1.1; animation: bump 1.2s ease infinite; }
+.stars { font-size: 44px; margin: 10px 0 18px; letter-spacing: 6px; }
+.stars .off { filter: grayscale(1); opacity: 0.3; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stat { background: var(--card); box-shadow: var(--shadow-sm); border-radius: 22px; padding: 18px 10px; text-align: center; }
+.stat.wide { grid-column: 1 / -1; }
+.stat-label { display: block; font-size: 16px; font-weight: 600; color: var(--muted); }
+.stat-value { display: block; font-size: 38px; font-weight: 700; color: var(--primary-dark); line-height: 1.2; }
+
+/* ---------- Pop-up konfirmasi ---------- */
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(43, 40, 80, 0.45);
+  border-radius: 24px;
+  animation: fadeIn 0.2s ease both;
+}
+.modal-box {
+  width: 430px;
+  padding: 24px 28px 22px;
+  text-align: center;
+  background: #fff;
+  border-radius: 28px;
+  border: 4px solid #d9d6ff;
+  box-shadow: 0 16px 40px rgba(80, 70, 160, 0.3);
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.modal-icon { font-size: 60px; line-height: 1.1; }
+.modal-box h2 { margin: 6px 0 4px; font-size: 28px; }
+.modal-box p { margin: 0 0 18px; font-size: 18px; font-weight: 500; color: var(--muted); }
+.modal-buttons { display: flex; justify-content: center; gap: 14px; }
+.modal-buttons .btn { min-width: 150px; }
+.btn-danger { background: linear-gradient(135deg, var(--danger), #ff8a65); }
+
+/* ---------- Confetti ---------- */
+.confetti { position: fixed; inset: 0; z-index: 50; pointer-events: none; overflow: hidden; }
+.confetti span {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confettiFall var(--dur) ease-in var(--delay) forwards;
+}
+
+/* ---------- 7. Pemberitahuan landscape & toast ---------- */
+/* layar.js menambahkan class "tegak" pada <html> saat HP/tablet berposisi tegak */
+.rotate-notice {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+.tegak .rotate-notice { display: flex; }
+.rotate-notice h2 { margin: 0; font-size: 28px; }
+.rotate-notice p { margin: 0; max-width: 320px; font-size: 18px; font-weight: 500; }
+.phone-icon { font-size: 92px; line-height: 1; animation: rotatePhone 2.6s ease-in-out infinite; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 120;
+  max-width: 90%;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: var(--text);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- 8. Animasi ---------- */
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut  { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.6); } }
+@keyframes popIn    { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes bump     { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.18); } }
+@keyframes pulse    { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes floatY   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-9px); }
+  40%, 80% { transform: translateX(9px); }
+}
+@keyframes rotatePhone {
+  0%, 15%   { transform: rotate(0deg); }
+  55%, 100% { transform: rotate(-90deg); }
+}
+@keyframes confettiFall {
+  0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(110vh) rotate(720deg); }
+}
+
+/* Hormati pengguna yang meminimalkan animasi */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
